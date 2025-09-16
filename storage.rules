@@ -1,0 +1,177 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ===================================
+    // FUNÇÕES AUXILIARES
+    // ===================================
+    
+    // Verificar se usuário está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Verificar se usuário é admin (todos os usuários são admin)
+    function isAdmin() {
+      return isAuthenticated();
+    }
+    
+    // Verificar se usuário está ativo
+    function isActiveUser() {
+      return isAuthenticated() && 
+             firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.is_active == true;
+    }
+    
+    // Validar tipo de arquivo
+    function isValidFileType(allowedTypes) {
+      return request.resource.contentType != null && 
+             request.resource.contentType in allowedTypes;
+    }
+    
+    // Validar tamanho do arquivo
+    function isValidFileSize(maxSizeMB) {
+      return request.resource.size <= maxSizeMB * 1024 * 1024;
+    }
+    
+    // Tipos de arquivo permitidos para processos
+    function allowedProcessFileTypes() {
+      return [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'text/plain',
+        'text/csv'
+      ];
+    }
+    
+    // Tipos de imagem permitidos para avatares
+    function allowedImageTypes() {
+      return [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp',
+        'image/gif'
+      ];
+    }
+
+    // ===================================
+    // REGRAS PARA ARQUIVOS DE PROCESSOS
+    // ===================================
+    
+    match /processes/{processId}/{fileName} {
+      // Leitura: usuários autenticados podem ler
+      allow read: if isActiveUser();
+      
+      // Upload: usuários autenticados podem fazer upload
+      allow write: if isActiveUser() && 
+                      isValidFileType(allowedProcessFileTypes()) &&
+                      isValidFileSize(50); // 50MB máximo
+      
+      // Exclusão: criador do arquivo ou admin podem excluir
+      allow delete: if isActiveUser() && 
+                       (resource.metadata.uploaded_by == request.auth.uid || isAdmin());
+    }
+
+    // ===================================
+    // REGRAS PARA AVATARES DE USUÁRIO
+    // ===================================
+    
+    match /avatars/{userId}/{fileName} {
+      // Leitura: todos os usuários autenticados podem ver avatares
+      allow read: if isAuthenticated();
+      
+      // Upload: apenas o próprio usuário pode fazer upload do avatar
+      allow write: if isAuthenticated() && 
+                      request.auth.uid == userId &&
+                      isValidFileType(allowedImageTypes()) &&
+                      isValidFileSize(5); // 5MB máximo para avatares
+      
+      // Exclusão: apenas o próprio usuário pode excluir seu avatar
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ===================================
+    // REGRAS PARA PASTA TEMPORÁRIA
+    // ===================================
+    
+    match /temp/{userId}/{fileName} {
+      // Leitura e escrita: apenas o próprio usuário
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == userId &&
+                            isValidFileSize(10); // 10MB máximo para arquivos temporários
+      
+      // Exclusão automática após 24 horas (implementar via Cloud Function)
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ===================================
+    // REGRAS PARA BACKUPS (ADMIN APENAS)
+    // ===================================
+    
+    match /backups/{backupFile} {
+      // Leitura e escrita: apenas admin
+      allow read, write: if isAdmin();
+      
+      // Exclusão: apenas admin
+      allow delete: if isAdmin();
+    }
+
+    // ===================================
+    // REGRAS PARA EXPORTS/RELATÓRIOS
+    // ===================================
+    
+    match /exports/{userId}/{fileName} {
+      // Leitura: apenas o usuário que gerou o export
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Escrita: sistema pode gerar exports
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Exclusão: usuário pode excluir seus exports
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ===================================
+    // REGRAS PARA ASSETS PÚBLICOS
+    // ===================================
+    
+    match /public/{fileName} {
+      // Leitura: todos podem ler assets públicos
+      allow read: if true;
+      
+      // Escrita: apenas admin pode adicionar assets públicos
+      allow write: if isAdmin();
+    }
+
+    // ===================================
+    // REGRAS PARA TEMPLATES DE DOCUMENTOS
+    // ===================================
+    
+    match /templates/{templateType}/{fileName} {
+      // Leitura: usuários autenticados podem ler templates
+      allow read: if isActiveUser();
+      
+      // Escrita: apenas admin pode gerenciar templates
+      allow write: if isAdmin() && 
+                      isValidFileType(allowedProcessFileTypes()) &&
+                      isValidFileSize(25); // 25MB máximo para templates
+    }
+
+    // ===================================
+    // REGRAS PADRÃO - NEGAR TUDO O RESTO
+    // ===================================
+    
+    // Qualquer arquivo não coberto pelas regras acima é negado
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
