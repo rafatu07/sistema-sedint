@@ -473,7 +473,7 @@ export const batchService = {
     type: 'create' | 'update' | 'delete';
     collection: string;
     id?: string;
-    data?: any;
+    data?: Record<string, unknown>;
   }>): Promise<void> {
     const batch = writeBatch(db);
 
@@ -526,12 +526,12 @@ export const firebaseUtils = {
   },
 
   // Remover valores undefined de um objeto para evitar erros do Firebase
-  removeUndefined(obj: any): any {
+  removeUndefined(obj: Record<string, unknown>): Record<string, unknown> {
     if (obj === null || obj === undefined || typeof obj !== 'object') {
       return obj;
     }
 
-    const cleaned: any = {};
+    const cleaned: Record<string, unknown> = {};
     for (const key in obj) {
       const value = obj[key];
       
@@ -552,7 +552,7 @@ export const firebaseUtils = {
   },
 
   // Converter processo do Firebase para formato local
-  convertFirebaseProcess(firebaseProcess: FirebaseProcess): any {
+  convertFirebaseProcess(firebaseProcess: FirebaseProcess): Record<string, unknown> {
     return {
       ...firebaseProcess,
       created_at: firebaseProcess.created_at.toDate().toISOString(),
@@ -563,12 +563,12 @@ export const firebaseUtils = {
   },
 
   // Sanitizar dados para histórico (converter Timestamps para strings)
-  sanitizeForHistory(data: any): any {
+  sanitizeForHistory(data: Record<string, unknown>): Record<string, unknown> {
     if (!data || typeof data !== 'object') {
       return data;
     }
 
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const key in data) {
       const value = data[key];
       

@@ -18,33 +18,11 @@ interface AuthContextType {
   clearError: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    // Em desenvolvimento, pode haver problemas de hot-reloading
-    if (import.meta.env.DEV) {
-      console.warn('Contexto de autenticação não encontrado. Isso pode ser devido a hot-reloading.');
-      // Retorna um contexto temporário para evitar crash em desenvolvimento
-      return {
-        currentUser: null,
-        firebaseUser: null,
-        loading: true,
-        error: null,
-        login: async () => {},
-        register: async () => {},
-        logout: async () => {},
-        updateUserProfile: async () => {},
-        clearError: () => {},
-        sendPasswordReset: async () => {}
-      };
-    }
-    console.error('Erro: useAuth deve ser usado dentro de um AuthProvider');
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-  }
-  return context;
-};
+// Hook movido para src/hooks/use-auth.ts para evitar warning do Fast Refresh
+// Re-exportar para compatibilidade
+export { useAuth } from '@/hooks/use-auth'
 
 interface AuthProviderProps {
   children: React.ReactNode;
@@ -70,7 +48,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null);
 
       // Preparar dados para Firestore (remover undefined)
-      const updateData: any = {};
+      const updateData: Record<string, unknown> = {};
       if (userData.name !== undefined) updateData.name = userData.name;
       if (userData.email !== undefined) updateData.email = userData.email;
       if (userData.telefone !== undefined) updateData.telefone = userData.telefone || null;
@@ -88,8 +66,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Atualizar estado local
       setCurrentUser(prev => prev ? { ...prev, ...userData } : null);
-    } catch (err: any) {
-      const errorMessage = err.message || 'Erro ao atualizar perfil';
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao atualizar perfil';
       setError(errorMessage);
       throw new Error(errorMessage);
     } finally {
@@ -124,7 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setFirebaseUser(firebaseUser);
       
       console.log('Login realizado com sucesso:', localUser.name);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro no login:', err);
       
       // Tratar erros específicos do Firebase
@@ -147,7 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           errorMessage = 'Muitas tentativas. Tente novamente mais tarde';
           break;
         default:
-          errorMessage = err.message || 'Erro ao fazer login';
+          errorMessage = err instanceof Error ? err.message : 'Erro ao fazer login';
       }
       
       setError(errorMessage);
@@ -192,7 +170,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password: credentials.password
       });
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro no registro:', err);
       
       let errorMessage = 'Erro desconhecido no registro';
@@ -211,7 +189,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           errorMessage = 'Registro não permitido. Contate o administrador';
           break;
         default:
-          errorMessage = err.message || 'Erro ao criar conta';
+          errorMessage = err instanceof Error ? err.message : 'Erro ao criar conta';
       }
       
       setError(errorMessage);
@@ -233,7 +211,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setFirebaseUser(null);
       
       console.log('Logout realizado com sucesso');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro no logout:', err);
       setError('Erro ao fazer logout');
       throw new Error('Erro ao fazer logout');
@@ -255,7 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.resetPassword(email);
       
       console.log('Email de redefinição enviado para:', email);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao redefinir senha:', err);
       
       let errorMessage = 'Erro ao redefinir senha';
@@ -268,7 +246,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           errorMessage = 'Email inválido';
           break;
         default:
-          errorMessage = err.message || 'Erro ao redefinir senha';
+          errorMessage = err instanceof Error ? err.message : 'Erro ao redefinir senha';
       }
       
       setError(errorMessage);
@@ -301,7 +279,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             // Atualizar último login
             await userService.updateUser(userData.id, {
-              last_login: new Date() as any,
+              last_login: new Date(),
             });
             
             console.log('Usuário autenticado:', localUser.name);

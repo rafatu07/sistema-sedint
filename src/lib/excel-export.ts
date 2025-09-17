@@ -202,8 +202,8 @@ export class ExcelExportService {
           // Limitar nome da sheet a 31 caracteres (limite do Excel)
           let sheetName = process.titulo.substring(0, 31);
           
-          // Remover caracteres inválidos para nome de sheet
-          sheetName = sheetName.replace(/[\\\/\?\*\[\]:]/g, '');
+      // Remover caracteres inválidos para nome de sheet
+      sheetName = sheetName.replace(/[\\/?*[\]:]/g, '');
           
           // Garantir que o nome não seja vazio
           if (!sheetName.trim()) {

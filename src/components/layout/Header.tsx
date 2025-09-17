@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, User, ClipboardList } from 'lucide-react';
+import { LogOut, User, ClipboardList, Building2, Users, Shield } from 'lucide-react';
 import { User as UserType } from '@/types/process';
 import { UserProfileModal } from '@/components/user/UserProfileModal';
 import { useToast } from '@/hooks/use-toast';
@@ -19,9 +19,11 @@ interface HeaderProps {
   user: UserType;
   onLogout: () => void;
   onUpdateUser?: (userData: Partial<UserType>) => Promise<void>;
+  activeDashboard?: 'contratos' | 'crm' | 'auditoria';
+  onDashboardChange?: (dashboard: 'contratos' | 'crm' | 'auditoria') => void;
 }
 
-export function Header({ user, onLogout, onUpdateUser }: HeaderProps) {
+export function Header({ user, onLogout, onUpdateUser, activeDashboard = 'contratos', onDashboardChange }: HeaderProps) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const { toast } = useToast();
   const userInitials = user.name
@@ -58,6 +60,45 @@ export function Header({ user, onLogout, onUpdateUser }: HeaderProps) {
               <span className="text-green-600">Contratos</span>
             </h1>
           </div>
+          
+          {/* Navegação entre dashboards */}
+          {onDashboardChange && (
+            <div className="flex items-center space-x-1 ml-6">
+              <button
+                onClick={() => onDashboardChange('contratos')}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeDashboard === 'contratos'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <ClipboardList className="h-4 w-4 mr-2 inline" />
+                Contratos
+              </button>
+              <button
+                onClick={() => onDashboardChange('crm')}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeDashboard === 'crm'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <Building2 className="h-4 w-4 mr-2 inline" />
+                CRM
+              </button>
+              <button
+                onClick={() => onDashboardChange('auditoria')}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeDashboard === 'auditoria'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                <Shield className="h-4 w-4 mr-2 inline" />
+                Auditoria
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center space-x-4">

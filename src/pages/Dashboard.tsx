@@ -153,7 +153,7 @@ export function Dashboard({ user }: DashboardProps) {
         unsubscribe();
       }
     };
-  }, [toast]);
+  }, [user.id, toast]);
 
   // Filter processes with progress
   const filteredProcessesWithProgress = useMemo(() => {
@@ -234,11 +234,11 @@ export function Dashboard({ user }: DashboardProps) {
         title: "Exportação concluída!",
         description: `${processes.length} contratos foram exportados para Excel.`,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro ao exportar:', error);
       toast({
         title: "Erro na exportação",
-        description: error.message || "Não foi possível exportar os dados.",
+        description: error instanceof Error ? error.message : "Não foi possível exportar os dados.",
         variant: "destructive",
       });
     } finally {
@@ -262,11 +262,11 @@ export function Dashboard({ user }: DashboardProps) {
         title: "Contrato concluído!",
         description: "O contrato foi marcado como concluído com sucesso.",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao concluir processo:', err);
       toast({
         title: "Erro ao concluir contrato",
-        description: err.message || "Não foi possível concluir o contrato. Tente novamente.",
+        description: err instanceof Error ? err.message : "Não foi possível concluir o contrato. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -282,7 +282,7 @@ export function Dashboard({ user }: DashboardProps) {
 
       // Se montou processo, atualizar o número no processo principal
       const processRef = doc(db, 'processes', processId);
-      const updateProcessData: any = {
+      const updateProcessData: Record<string, unknown> = {
         data: updateData.data,
         local: updateData.local,
         updated_by: user.name,
@@ -297,7 +297,7 @@ export function Dashboard({ user }: DashboardProps) {
       await updateDoc(processRef, updateProcessData);
 
       // Preparar dados do histórico (evitando valores undefined)
-      const historyData: any = {
+      const historyData: Record<string, unknown> = {
         process_id: processId,
         action: 'progress_update',
         old_values: {},
@@ -376,11 +376,11 @@ export function Dashboard({ user }: DashboardProps) {
         description: `Andamento salvo para ${formatDate(updateData.data)}.`,
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao registrar andamento:', err);
       toast({
         title: "Erro ao registrar andamento",
-        description: err.message || "Não foi possível registrar o andamento. Tente novamente.",
+        description: err instanceof Error ? err.message : "Não foi possível registrar o andamento. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -451,11 +451,11 @@ export function Dashboard({ user }: DashboardProps) {
 
       setIsFormOpen(false);
       setSelectedProcess(null);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao salvar processo:', err);
       toast({
         title: "Erro ao salvar contrato",
-        description: err.message || "Não foi possível salvar o contrato. Tente novamente.",
+        description: err instanceof Error ? err.message : "Não foi possível salvar o contrato. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -527,11 +527,11 @@ export function Dashboard({ user }: DashboardProps) {
         setProcessesWithProgress(processesWithLatestProgress);
       }
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao excluir processo:', err);
       toast({
         title: "Erro ao excluir contrato",
-        description: err.message || "Não foi possível excluir o contrato. Tente novamente.",
+        description: err instanceof Error ? err.message : "Não foi possível excluir o contrato. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -558,7 +558,7 @@ export function Dashboard({ user }: DashboardProps) {
       }));
 
       setHistory(localHistory);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao carregar histórico:', err);
       toast({
         title: "Erro ao carregar histórico",

@@ -165,7 +165,6 @@ const FormMessage = React.forwardRef<
 FormMessage.displayName = "FormMessage"
 
 export {
-  useFormField,
   Form,
   FormItem,
   FormLabel,
@@ -174,3 +173,6 @@ export {
   FormMessage,
   FormField,
 }
+
+// Exportar o hook separadamente para evitar warning do Fast Refresh
+export { useFormField }

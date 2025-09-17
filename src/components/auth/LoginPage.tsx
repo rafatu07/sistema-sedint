@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { Eye, EyeOff, Lock, Mail, UserPlus, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/use-auth';
 
 interface LoginPageProps {
   onLogin: (user: { id: string; email: string; name: string; role: 'admin' | 'user' }) => void;
@@ -49,10 +49,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         title: "Login realizado com sucesso!",
         description: "Bem-vindo ao sistema",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Credenciais inválidas";
       toast({
         title: "Erro no login",
-        description: err.message || "Credenciais inválidas",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -99,10 +100,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
         title: "Cadastro realizado com sucesso!",
         description: "Conta criada e login automático efetuado",
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao criar conta";
       toast({
         title: "Erro no cadastro",
-        description: err.message || "Erro ao criar conta",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -126,10 +128,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       
       setShowResetForm(false);
       setResetEmail('');
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Erro ao enviar email";
       toast({
         title: "Erro ao redefinir senha",
-        description: err.message || "Erro ao enviar email",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

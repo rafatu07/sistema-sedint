@@ -107,16 +107,19 @@ export function UserProfileModal({ user, isOpen, onClose, onSave }: UserProfileM
             title: "Senha alterada!",
             description: "Sua senha foi alterada com sucesso.",
           });
-        } catch (passwordError: any) {
+        } catch (passwordError: unknown) {
           // Se deu erro na senha, mostrar erro específico mas dados já foram salvos
           let errorMessage = "Erro ao alterar senha.";
           
-          if (passwordError.code === 'auth/wrong-password') {
-            errorMessage = "Senha atual incorreta.";
-          } else if (passwordError.code === 'auth/weak-password') {
-            errorMessage = "A nova senha é muito fraca.";
-          } else if (passwordError.code === 'auth/requires-recent-login') {
-            errorMessage = "Por segurança, você precisa fazer login novamente antes de alterar a senha.";
+          if (passwordError && typeof passwordError === 'object' && 'code' in passwordError) {
+            const firebaseError = passwordError as { code: string };
+            if (firebaseError.code === 'auth/wrong-password') {
+              errorMessage = "Senha atual incorreta.";
+            } else if (firebaseError.code === 'auth/weak-password') {
+              errorMessage = "A nova senha é muito fraca.";
+            } else if (firebaseError.code === 'auth/requires-recent-login') {
+              errorMessage = "Por segurança, você precisa fazer login novamente antes de alterar a senha.";
+            }
           }
           
           toast({
@@ -135,10 +138,11 @@ export function UserProfileModal({ user, isOpen, onClose, onSave }: UserProfileM
       });
 
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Não foi possível atualizar o perfil. Tente novamente.";
       toast({
         title: "Erro ao salvar perfil",
-        description: err.message || "Não foi possível atualizar o perfil. Tente novamente.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

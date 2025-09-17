@@ -41,10 +41,10 @@ const actionConfig = {
 };
 
 export function ProcessHistory({ isOpen, onClose, history, processTitle, loading = false }: ProcessHistoryProps) {
-  const formatChanges = (oldValues?: any, newValues?: any) => {
+  const formatChanges = (oldValues?: Record<string, unknown>, newValues?: Record<string, unknown>) => {
     if (!oldValues || !newValues) return null;
 
-    const formatValue = (value: any) => {
+    const formatValue = (value: unknown) => {
       // Se é um Timestamp do Firebase, converter para string
       if (value && typeof value === 'object' && value.seconds && value.nanoseconds) {
         try {

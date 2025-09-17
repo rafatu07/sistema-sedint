@@ -39,6 +39,41 @@ export interface FirebaseProcessHistory extends Omit<import('./process').Process
   ip_address?: string; // IP do usuário (para auditoria)
 }
 
+// Tipos Firebase para CRM
+export interface FirebaseEmpresa extends Omit<import('./crm').Empresa, 'id' | 'created_at' | 'updated_at'> {
+  id: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+  created_by: string; // UID do usuário que criou
+  updated_by: string; // UID do usuário que atualizou
+  tags?: string[]; // Tags para categorização
+  status: 'ativa' | 'inativa' | 'suspensa'; // Status da empresa
+  ultima_atividade?: Timestamp; // Última atividade registrada
+}
+
+export interface FirebaseContato extends Omit<import('./crm').Contato, 'id' | 'created_at' | 'updated_at'> {
+  id: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+  created_by: string; // UID do usuário que criou
+  updated_by: string; // UID do usuário que atualizou
+  status: 'ativo' | 'inativo'; // Status do contato
+  ultima_comunicacao?: Timestamp; // Última comunicação com o contato
+}
+
+export interface FirebaseLogInformacao extends Omit<import('./crm').LogInformacao, 'id' | 'created_at' | 'updated_at' | 'data_ocorrencia' | 'data_registro'> {
+  id: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+  created_by: string; // UID do usuário que criou
+  updated_by: string; // UID do usuário que atualizou
+  data_ocorrencia: Timestamp; // Data em que a informação ocorreu
+  data_registro: Timestamp; // Data em que foi registrada no sistema
+  anexos?: string[]; // URLs dos anexos
+  is_private: boolean; // Se a informação é privada/confidencial
+  tags?: string[]; // Tags para categorização
+}
+
 export interface FirebaseNotification extends FirebaseDocument {
   user_id: string;
   title: string;
@@ -47,7 +82,7 @@ export interface FirebaseNotification extends FirebaseDocument {
   read: boolean;
   read_at?: Timestamp;
   action_url?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // Tipos para upload de arquivos
@@ -101,15 +136,15 @@ export interface QueryOptions {
   where?: {
     field: string;
     operator: '==' | '!=' | '<' | '<=' | '>' | '>=' | 'in' | 'not-in' | 'array-contains';
-    value: any;
+    value: unknown;
   }[];
-  startAfter?: any;
+  startAfter?: unknown;
 }
 
 export interface PaginatedResult<T> {
   data: T[];
   hasMore: boolean;
-  lastDoc?: any;
+  lastDoc?: unknown;
   total?: number;
 }
 
@@ -162,7 +197,7 @@ export interface AuditLog extends FirebaseDocument {
   action: 'create' | 'read' | 'update' | 'delete' | 'login' | 'logout';
   resource_type: 'process' | 'user' | 'file' | 'system';
   resource_id: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   ip_address?: string;
   user_agent?: string;
   session_id?: string;
@@ -194,7 +229,7 @@ export interface BatchOperation {
   type: 'create' | 'update' | 'delete';
   collection: string;
   id: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface BatchResult {
@@ -213,6 +248,9 @@ export interface BackupData {
     process_history: FirebaseProcessHistory[];
     users: FirebaseUser[];
     notifications: FirebaseNotification[];
+    empresas: FirebaseEmpresa[];
+    contatos: FirebaseContato[];
+    logs_informacao: FirebaseLogInformacao[];
   };
   metadata: {
     total_documents: number;
