@@ -338,7 +338,7 @@ export function CRMDashboard({ user }: CRMDashboardProps) {
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold">CRM - Gestão de Contatos</h1>
+            <h1 className="text-3xl font-bold">CRM - Gestão de Contratos</h1>
             <p className="text-muted-foreground">Gerencie empresas, contatos e informações</p>
           </div>
           <div className="flex items-center gap-3">
